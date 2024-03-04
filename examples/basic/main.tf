@@ -2,22 +2,32 @@ data "google_client_config" "default" {}
 
 
 locals {
-  bucket_name = var.bucket_name == "" ? format("%s-%s-%s", "terraform-state", data.google_client_config.default.project, random_string.randomstring.result) : var.bucket_name
+  labels = {
+    "managed-by" = "terraform"
+  }
 }
 
-module "basic" {
-  source      = "../../"
-  project_id  = var.project_id
-  bucket_name = local.bucket_name
+module "terraform_state" {
+  source     = "../../"
+  project_id = "project-shape-293115"
+  location     = "EU"
+
+  labels = {
+    "managed-by" = "terraform"
+  }
 }
 
-data "google_project" "project" {
+output "bucket_url" {
+  description = "The Url of the statebucket"
+  value       = module.terraform_state.bucket_url
 }
 
+output "bucket_name" {
+  description = "The Url of the statebucket"
+  value       = module.terraform_state.bucket_name
+}
 
-resource "random_string" "randomstring" {
-  length      = 25
-  min_lower   = 15
-  min_numeric = 10
-  special     = false
+output "backend_config" {
+  description = "Terraform backend configuration snippet for using this bucket as the state backend."
+  value       = module.terraform_state.backend_config
 }
